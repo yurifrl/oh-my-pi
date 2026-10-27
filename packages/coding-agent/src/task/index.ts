@@ -151,6 +151,7 @@ export { AgentOutputManager } from "./output-manager";
 export * from "./read-only-policy";
 export type { AgentDefinition, SubagentEventPayload, SubagentLifecyclePayload, SubagentProgressPayload } from "./types";
 export type { AgentProgress, SingleResult, TaskParams, TaskToolDetails } from "@oh-my-pi/pi-tui/tools/task";
+export type { Executor } from "./types";
 export * from "./result-summary";
 export {
 	TASK_SUBAGENT_EVENT_CHANNEL,

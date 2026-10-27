@@ -59,6 +59,7 @@ import type {
 	ToolInfo,
 	TranscriptPresenter,
 } from "./types";
+import type { Executor } from "../../task/types";
 
 installLegacyPiSpecifierShim();
 
@@ -122,7 +123,18 @@ export class ExtensionRuntimeNotInitializedError extends Error {
  */
 export class ExtensionRuntime implements IExtensionRuntime {
 	flagValues = new Map<string, boolean | string>();
+	pendingExecutorRegistrations: Array<{ name: string; executor: Executor; sourceId: string }> = [];
 	pendingProviderRegistrations: Array<{ name: string; config: ProviderConfig; sourceId: string }> = [];
+	registerExecutor(name: string, executor: Executor, sourceId: string): void {
+		if (this.pendingExecutorRegistrations.some(registration => registration.name === name)) {
+			throw new Error(`Executor "${name}" is already registered`);
+		}
+		this.pendingExecutorRegistrations.push({ name, executor, sourceId });
+	}
+	unregisterExecutor(name: string, _sourceId: string): void {
+		const remaining = this.pendingExecutorRegistrations.filter(registration => registration.name !== name);
+		this.pendingExecutorRegistrations.splice(0, this.pendingExecutorRegistrations.length, ...remaining);
+	}
 
 	registerProvider(name: string, config: ProviderConfig, sourceId: string): void {
 		this.pendingProviderRegistrations.push({ name, config, sourceId });
@@ -212,6 +224,11 @@ class ConcreteExtensionAPI implements ExtensionAPI, IExtensionRuntime {
 	readonly pendingProviderRegistrations: Array<{
 		name: string;
 		config: ProviderConfig;
+		sourceId: string;
+	}> = [];
+	readonly pendingExecutorRegistrations: Array<{
+		name: string;
+		executor: Executor;
 		sourceId: string;
 	}> = [];
 
@@ -442,6 +459,14 @@ class ConcreteExtensionAPI implements ExtensionAPI, IExtensionRuntime {
 
 	unregisterProvider(name: string): void {
 		this.runtime.unregisterProvider(name, this.extension.path);
+	}
+
+	registerExecutor(name: string, executor: Executor): void {
+		this.runtime.registerExecutor(name, executor, this.extension.path);
+	}
+
+	unregisterExecutor(name: string): void {
+		this.runtime.unregisterExecutor(name, this.extension.path);
 	}
 }
 

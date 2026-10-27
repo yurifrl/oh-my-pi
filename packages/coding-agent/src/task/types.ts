@@ -1,4 +1,4 @@
-import type { AgentSource } from "@oh-my-pi/pi-tui/tools/task";
+import type { AgentSource, SingleResult } from "@oh-my-pi/pi-tui/tools/task";
 export {
 	TASK_SUBAGENT_PROGRESS_CHANNEL,
 	TASK_SUBAGENT_LIFECYCLE_CHANNEL,
@@ -12,6 +12,7 @@ import { $env, isRecord } from "@oh-my-pi/pi-utils";
 
 import type { AgentSessionEvent } from "../session/agent-session";
 import type { ConfiguredThinkingLevel } from "@oh-my-pi/pi-tui/thinking";
+import type { ExecutorOptions } from "./executor";
 
 const parseNumber = (value: string | undefined, defaultValue: number): number => {
 	if (value) {
@@ -318,6 +319,8 @@ export interface AgentDefinition {
 	systemPrompt: string;
 	tools?: string[];
 	spawns?: string[] | "*";
+	/** Named executor that replaces the in-process subprocess dispatch for this agent (see task/executor-registry.ts). */
+	executor?: string;
 	model?: string[];
 	thinkingLevel?: ConfiguredThinkingLevel;
 	output?: unknown;
@@ -334,3 +337,13 @@ export interface AgentDefinition {
 	source: AgentSource;
 	filePath?: string;
 }
+
+/**
+ * Pluggable subagent executor: replaces the in-process `runSubprocess` dispatch
+ * for agents whose frontmatter declares `executor: <name>`. Receives the same
+ * ExecutorOptions the local path builds, MUST report a single SingleResult, and
+ * SHOULD emit `task:subagent:progress` so parents and frontends render live
+ * progress indistinguishably from local subagents. Register via the task
+ * executor registry (`task/executor-registry.ts`).
+ */
+export type Executor = (options: ExecutorOptions) => Promise<SingleResult>;

@@ -43,6 +43,7 @@ import type {
 	ToolLoadMode,
 } from "@oh-my-pi/pi-agent-core";
 import type { CompactionResult } from "@oh-my-pi/pi-agent-core/compaction";
+import type { Executor } from "../../task/types";
 import type { ContextUsage } from "@oh-my-pi/pi-tui/status-line/types";
 import type { LoopConditionConfig } from "@oh-my-pi/pi-tui/status-line/loop";
 import type { LivePhase } from "@oh-my-pi/pi-tui/apps/live-visualizer";
@@ -2211,6 +2212,15 @@ export interface ExtensionAPI {
 	 * Has no effect when the provider is not registered.
 	 */
 	unregisterProvider(name: string): void;
+	/**
+	 * Register a named subagent executor.
+	 *
+	 * An executor replaces the default in-process subprocess dispatch for agents
+	 * whose markdown declares `executor: <name>`. It MUST emit the same
+	 * `task:subagent:lifecycle` events the local path emits (and SHOULD emit
+	 * progress), so parents and frontends cannot distinguish a remote child.
+	 */
+	registerExecutor(name: string, executor: Executor): void;
 
 	/** Shared event bus for extension communication. */
 	events: EventBus;
@@ -2391,6 +2401,12 @@ export interface ExtensionRuntimeState {
 	unregisterProvider(name: string, sourceId: string): void;
 	/** What holds `shortcut` for the extension at `extensionPath`; answered by the runner once it exists. */
 	getShortcutConflict(shortcut: KeyId, extensionPath: string): ShortcutConflict | undefined;
+	/** Executor registrations queued during extension loading, processed during session initialization */
+	pendingExecutorRegistrations: Array<{ name: string; executor: Executor; sourceId: string }>;
+	/** Queue an executor registration until initialization, then apply it immediately. */
+	registerExecutor(name: string, executor: Executor, sourceId: string): void;
+	/** Remove a queued or initialized executor registration. */
+	unregisterExecutor(name: string, executor: Executor, sourceId: string): void;
 }
 
 /** Action implementations for ExtensionAPI methods. */

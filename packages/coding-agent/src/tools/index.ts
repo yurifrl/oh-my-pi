@@ -113,6 +113,7 @@ export * from "../lsp";
 export * from "@oh-my-pi/pi-tui/tools/streaming-output";
 export * from "../task";
 export * from "../web/search";
+export type { Executor } from "../task/types";
 export * from "./ask";
 export * from "./ast-edit";
 export * from "./ast-grep";

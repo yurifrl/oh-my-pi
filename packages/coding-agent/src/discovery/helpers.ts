@@ -308,6 +308,8 @@ export interface ParsedAgentFields {
 	prewalk?: boolean | string;
 	/** `true` = advise with the default advisor-role model; string = advise with that model pattern. */
 	advisor?: boolean | string;
+	/** Named executor that replaces the in-process subprocess dispatch (see task/executor-registry.ts). */
+	executor?: string;
 }
 
 /**
@@ -389,6 +391,11 @@ export function parseAgentFields(frontmatter: Record<string, unknown>): ParsedAg
 		const trimmed = frontmatter.advisor.trim();
 		if (trimmed) advisor = trimmed;
 	}
+	let executor: string | undefined;
+	if (typeof frontmatter.executor === "string") {
+		const trimmed = frontmatter.executor.trim();
+		if (trimmed) executor = trimmed;
+	}
 	const autoloadSkills = parseArrayOrCSV(frontmatter.autoloadSkills)
 		?.map(s => s.trim())
 		.filter(Boolean);
@@ -406,6 +413,7 @@ export function parseAgentFields(frontmatter: Record<string, unknown>): ParsedAg
 		readSummarize,
 		prewalk,
 		advisor,
+		executor,
 	};
 }
 

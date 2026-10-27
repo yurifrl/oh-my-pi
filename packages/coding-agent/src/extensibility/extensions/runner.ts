@@ -39,6 +39,10 @@ import { type Theme, theme } from "@oh-my-pi/pi-tui/theme";
 import type { AsyncJobSnapshot, SendUserMessageOptions } from "../../session/agent-session";
 import { MAIN_AGENT_ID } from "../../registry/agent-registry";
 import type { SessionManager } from "../../session/session-manager";
+import {
+	registerExecutor as registerSubagentExecutor,
+	unregisterExecutor as unregisterSubagentExecutor,
+} from "../../task/executor-registry";
 import { addFileDeleteFallback, addFileWriteFallback } from "../../tools/file-write-fallback";
 import type { BranchHandler, NavigateTreeHandler, NewSessionHandler } from "../session-handler-types";
 import { accumulateToolCallResult, buildAggregatedToolCallResult } from "../shared-events";
@@ -862,6 +866,12 @@ export class ExtensionRunner {
 		};
 		this.runtime.unregisterProvider = name => {
 			this.modelRegistry.unregisterProvider(name);
+		};
+		this.runtime.registerExecutor = (name, executor, sourceId) => {
+			registerSubagentExecutor(name, executor, sourceId);
+		};
+		this.runtime.unregisterExecutor = (name, sourceId) => {
+			unregisterSubagentExecutor(name, sourceId);
 		};
 
 		// Context actions (required)

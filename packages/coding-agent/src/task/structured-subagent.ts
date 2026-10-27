@@ -43,6 +43,7 @@ import { buildOutputValidator } from "../tools/output-schema-validator";
 import { trackLateCleanup } from "../utils/late-cleanup";
 import { type DiscoveryResult, discoverAgents, getAgent } from "./discovery";
 import { type ExecutorOptions, runSubprocess, type SubagentToolResult } from "./executor";
+import { hasExecutor, listExecutors, resolveExecutor } from "./executor-registry";
 import {
 	applyEligibleNestedPatches,
 	type IsolationContext,
@@ -208,6 +209,8 @@ export interface EffectiveSubagentPolicy {
 	agentName: string;
 	agent: AgentDefinition;
 	effectiveAgent: AgentDefinition;
+	/** Named executor that replaces the in-process subprocess dispatch (see task/executor-registry.ts). */
+	executor?: string;
 	modelOverride?: string[];
 	/** Prepared read-only source fork for the bundled seance agent. */
 	preparedSession?: PreparedSeanceSession;
@@ -633,11 +636,25 @@ export async function resolveEffectiveSubagentPolicy(
 			"Subagent isolated execution requires task.isolation.enabled; it is currently false.",
 		);
 	}
+	const declaredExecutor = effectiveAgent.executor ?? agent.executor;
+	if (declaredExecutor && !hasExecutor(declaredExecutor)) {
+		throw new StructuredSubagentError(
+			"preflight",
+			`Agent "${agentName}" declares executor "${declaredExecutor}" but no executor with that name is registered. Available: ${listExecutors().join(", ") || "(none)"}`,
+		);
+	}
+	if (declaredExecutor && isIsolated) {
+		throw new StructuredSubagentError(
+			"preflight",
+			`Agent "${agentName}" declares executor "${declaredExecutor}", which runs remotely; isolated execution is not supported for remote executors.`,
+		);
+	}
 	return {
 		discovery,
 		agentName,
 		agent,
 		effectiveAgent,
+		executor: declaredExecutor,
 		modelOverride,
 		preparedSession: preparedSeance?.session,
 		modelRole,

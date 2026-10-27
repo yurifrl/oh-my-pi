@@ -263,6 +263,9 @@ import {
 	projectSystemPromptToolMetadata,
 	withoutAgentsMd,
 } from "./system-prompt";
+import {
+	registerExecutor as registerSubagentExecutor,
+} from "./task/executor-registry";
 import type { AgentDefinition } from "./task/types";
 import { AgentOutputManager } from "./task/output-manager";
 import { wrapStreamFnWithProviderConcurrency } from "./task/provider-concurrency";
@@ -1244,6 +1247,10 @@ export async function loadCliExtensionProviders(
 		modelRegistry.registerProvider(name, config, sourceId);
 	}
 	extensionsResult.runtime.pendingProviderRegistrations = [];
+	for (const { name, executor, sourceId } of extensionsResult.runtime.pendingExecutorRegistrations) {
+		registerSubagentExecutor(name, executor, sourceId);
+	}
+	extensionsResult.runtime.pendingExecutorRegistrations = [];
 	if (options.discoverModels !== false) await modelRegistry.refreshRuntimeProviders();
 }
 
@@ -3102,6 +3109,12 @@ async function createAgentSessionScoped(options: CreateAgentSessionOptions): Pro
 				modelRegistry.registerProvider(name, config, sourceId);
 			}
 			extensionsResult.runtime.pendingProviderRegistrations = [];
+		}
+		if (extensionsResult.runtime.pendingExecutorRegistrations.length > 0) {
+			for (const { name, executor, sourceId } of extensionsResult.runtime.pendingExecutorRegistrations) {
+				registerSubagentExecutor(name, executor, sourceId);
+			}
+			extensionsResult.runtime.pendingExecutorRegistrations = [];
 		}
 		// Hydrate cached runtime (extension) provider catalogs before model
 		// resolution. Dynamic-only providers have no synchronous registration side
