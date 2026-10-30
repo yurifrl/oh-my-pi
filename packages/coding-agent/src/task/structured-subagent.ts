@@ -1093,7 +1093,12 @@ export async function runStructuredSubagent(request: StructuredSubagentRequest):
 		let result: SingleResult;
 		try {
 			if (!isolationContext) {
-				result = await runSubprocess(baseOptions);
+				const executor = policy.executor ? resolveExecutor(policy.executor) : undefined;
+				if (executor) {
+					result = await executor(baseOptions);
+				} else {
+					result = await runSubprocess(baseOptions);
+				}
 				onSubprocessResult?.(result);
 			} else {
 				result = await runIsolatedSubprocess({
