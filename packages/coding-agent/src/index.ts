@@ -72,7 +72,6 @@ export type {
 	TaskToolDetails,
 } from "@oh-my-pi/pi-tui/tools/task";
 // Tools (detail types and utilities)
-export type { Executor } from "./task/types";
 export * from "./tools";
 export * from "./tools/hashline-header-path";
 export * from "./utils/github";

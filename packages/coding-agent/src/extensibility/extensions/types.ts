@@ -2406,7 +2406,7 @@ export interface ExtensionRuntimeState {
 	/** Queue an executor registration until initialization, then apply it immediately. */
 	registerExecutor(name: string, executor: Executor, sourceId: string): void;
 	/** Remove a queued or initialized executor registration. */
-	unregisterExecutor(name: string, executor: Executor, sourceId: string): void;
+	unregisterExecutor(name: string, sourceId: string): void;
 }
 
 /** Action implementations for ExtensionAPI methods. */

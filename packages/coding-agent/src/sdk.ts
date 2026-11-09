@@ -263,9 +263,7 @@ import {
 	projectSystemPromptToolMetadata,
 	withoutAgentsMd,
 } from "./system-prompt";
-import {
-	registerExecutor as registerSubagentExecutor,
-} from "./task/executor-registry";
+import { registerExecutor as registerSubagentExecutor } from "./task/executor-registry";
 import type { AgentDefinition } from "./task/types";
 import { AgentOutputManager } from "./task/output-manager";
 import { wrapStreamFnWithProviderConcurrency } from "./task/provider-concurrency";

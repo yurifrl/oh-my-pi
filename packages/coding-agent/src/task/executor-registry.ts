@@ -1,5 +1,4 @@
-
-import type { Executor, } from "./types";
+import type { Executor } from "./types";
 
 interface RegisteredExecutor {
 	executor: Executor;
